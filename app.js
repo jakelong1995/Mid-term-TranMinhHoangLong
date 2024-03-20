@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
-// import authRoutes from './routes/auth.js';
+import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js'
 import profileRoutes from './routes/profiles.js';
 import authMiddleware from './middleware/authMiddleware.js';
@@ -20,6 +20,7 @@ const uri = `mongodb+srv://${process.env.MONGODB_DB_NAME}:${process.env.MONGODB_
 app.use(express.json());
 
 // Routes
+app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/profile', authMiddleware, profileRoutes);
 
