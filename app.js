@@ -1,10 +1,7 @@
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
-import authRoutes from "./routes/auth.js";
-import userRoutes from "./routes/users.js";
-import profileRoutes from "./routes/profiles.js";
-import authMiddleware from "./middleware/authMiddleware.js";
+import router from "./routes/index.js";
 
 // Load environment variables from a .env file
 dotenv.config();
@@ -13,6 +10,7 @@ dotenv.config();
 const app = express();
 
 // Connect to MongoDB database
+
 const PORT = process.env.PORT || 4001;
 const uri = `mongodb+srv://${process.env.MONGODB_DB_NAME}:${process.env.MONGODB_PWD}@cluster0.djglaud.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -20,9 +18,7 @@ const uri = `mongodb+srv://${process.env.MONGODB_DB_NAME}:${process.env.MONGODB_
 app.use(express.json());
 
 // Routes
-app.use("/auth", authRoutes);
-app.use("/user", userRoutes);
-app.use("/profile", authMiddleware, profileRoutes);
+app.use("/", router);
 
 // Connect to MongoDB database
 mongoose

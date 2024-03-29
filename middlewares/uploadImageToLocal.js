@@ -1,5 +1,5 @@
 import { MulterError } from "multer";
-import imageUploadService from "../helpers/uploadImage";
+import imageUploadService from "../helpers/uploadImage.js";
 
 const imageUploadLocal = (req, res, next) => {
   // Will be returned a multer middleware

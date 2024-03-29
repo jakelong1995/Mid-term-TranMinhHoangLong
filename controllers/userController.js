@@ -1,146 +1,141 @@
-// Import necessary modules and the User model
-import User from '../models/user.js';
+import {
+  findUsersBy,
+  insertUser,
+  countUsers,
+  updateUserBy,
+} from "../services/userService.js";
+import cloudinaryUploadImage from "../helpers/cloudinaryUploadImage.js";
 
-// Controller functions
-const userController = {
-  // Create a new user (Register)
-  createUser: async (req, res) => {
-    try {
-      // Extract user data from the request body
-      const { email, fullName, dob, pob, nationality, password } = req.body;
-      
-        // Check if any required field is missing or empty
-        if (!email || !fullName || !dob || !pob || !nationality || !password) {
-          return res.status(400).json({ message: 'All fields are required' });
-        }
+const getAllUsers = async (req, res) => {
+  const { query } = req;
+  const page = query.page || 1;
+  const limit = query.limit || 10;
+  const skip = (page - 1) * limit;
 
-        // Check if user already exists with the provided email
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'Email already exists' });
-        }
-        // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+  const result = await findUsersBy({
+    filters: {},
+    pagination: { limit, skip },
+  });
 
-      // Create a new user instance
-      const newUser = new User({
-        email,
-        fullName,
-        dob,
-        pob,
-        nationality,
-        password: hashedPassword,
-      });
+  const total = await countUsers();
 
-      // Save the new user to the database
-      await newUser.save();
-
-      // Send a success response
-      res.status(201).json({ message: 'User created successfully', user: newUser });
-    } catch (error) {
-
-      // Handle errors
-      console.error('Error creating user:', error);
-      res.status(500).json({ message: 'An error occurred while creating user' });
-    }
-  },
-
-// API to login
-    login: async (req, res) => {
-        try {
-        const { email, password } = req.body;
-    
-        // Check if user exists
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-    
-        // Verify password
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-            return res.status(401).json({ message: 'Invalid email or password' });
-        }
-    
-        // Generate JWT token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    
-        // Return token in response
-        res.status(200).json({ token, message: 'Login successful' });
-        } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'An error occurred while logging in' });
-        }
+  return res.json({
+    msg: "success",
+    data: result,
+    pagination: {
+      page,
+      limit,
+      totalItems: total,
+      totalPage: Math.ceil(total / limit),
     },
-  
-  // Read user information
-  getUser: async (req, res) => {
-    try {
-      // Extract user ID from request parameters
-      const userId = req.params.userId;
-      
-      // Find the user by ID in the database
-      const user = await User.findById(userId);
+  });
+};
 
-      // If user not found, return a 404 response
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      // Send user data as response
-      res.status(200).json({ user });
-    } catch (error) {
-      // Handle errors
-      console.error('Error fetching user:', error);
-      res.status(500).json({ message: 'An error occurred while fetching user' });
+const getUsersBy = (req, res) => {
+  const { body } = req;
+  let result = null;
+  if (body) {
+    const { filters } = body;
+    if (filters) {
+      result = findUsersBy({ filters });
     }
-  },
+  }
+  return res.json({
+    msg: "success",
+    data: result,
+  });
+};
 
-  // Update user information
-  updateUser: async (req, res) => {
-    try {
-      // Extract user ID from request parameters
-      const userId = req.params.userId;
-      
-      // Find the user by ID in the database and update
-      const updatedUser = await User.findByIdAndUpdate(userId, req.body, { new: true });
+const updateUserById = (req, res) => {};
+// uuid
+const deleteUserById = (req, res) => {};
 
-      // If user not found, return a 404 response
-      if (!updatedUser) {
-        return res.status(404).json({ message: 'User not found' });
+const createAnUser = (req, res) => {
+  const { body, decode } = req;
+  if (decode && decode.role === "admin") {
+    let result;
+    if (body) {
+      const { uname, fname, gender } = body;
+      if (!uname || !fname || gender === null) {
+        return res.status(400).json({
+          msg: "fail, not enough info...",
+        });
       }
-
-      // Send updated user data as response
-      res.status(200).json({ message: 'User updated successfully', user: updatedUser });
-    } catch (error) {
-      // Handle errors
-      console.error('Error updating user:', error);
-      res.status(500).json({ message: 'An error occurred while updating user' });
-    }
-  },
-
-  // Delete user account
-  deleteUser: async (req, res) => {
-    try {
-      // Extract user ID from request parameters
-      const userId = req.params.userId;
-      
-      // Find the user by ID in the database and delete
-      const deletedUser = await User.findByIdAndDelete(userId);
-
-      // If user not found, return a 404 response
-      if (!deletedUser) {
-        return res.status(404).json({ message: 'User not found' });
+      result = insertUser({ uname, fname, gender });
+      if (!result) {
+        return res.status(400).json({
+          msg: "fail, user existed!",
+        });
       }
-
-      // Send success response
-      res.status(200).json({ message: 'User deleted successfully' });
-    } catch (error) {
-      // Handle errors
-      console.error('Error deleting user:', error);
-      res.status(500).json({ message: 'An error occurred while deleting user' });
     }
+    return res.json({
+      msg: "insert successfully!",
+    });
+  } else if (decode && decode.role === "guest") {
+    return res.status(403).json({
+      msg: "Not permission",
+    });
+  } else {
+    return res.status(404).json({
+      msg: "Role is invalid",
+    });
   }
 };
 
-export default userController;
+const createUsers = (req, res) => {
+  const { body } = req;
+  let result = {
+    success: [],
+    fail: [],
+  };
+  if (body) {
+    const { users = [] } = body;
+    users.map((user) => {
+      const { uname, fname, gender } = user;
+      if (!uname || !fname || gender === null) {
+        result.fail.push(user);
+        return;
+      }
+      let _result = insertUser({ uname, fname, gender });
+      if (!_result) {
+        result.fail.push(user);
+        return;
+      }
+      result.success.push(user);
+    });
+  }
+  return res.json({
+    data: result,
+  });
+};
+
+const uploadAvatar = async (req, res) => {
+  const { decode, file } = req;
+  try {
+    const resp = await cloudinaryUploadImage(file.path);
+    console.log(resp);
+    const { secure_url, width, height } = resp;
+    // avatar: server/uploads/tenfile.png
+    await updateUserBy({ avatar: secure_url }, { uname: decode.uname });
+    return res.status(200).json({
+      msg: "Upload Success",
+      imageUrl: secure_url,
+      imageInfo: {
+        height,
+        width,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ msg: "Upload Failed" });
+  }
+};
+export default {
+  getAllUsers,
+  getUsersBy,
+  createAnUser,
+  createUsers,
+  updateUserById,
+  deleteUserById,
+  uploadAvatar,
+};

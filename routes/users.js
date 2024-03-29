@@ -1,6 +1,7 @@
 import express from "express";
 import userController from "../controllers/userController.js";
 import { imageUploadLocal } from "../middlewares/uploadImageToLocal.js";
+
 const router = express.Router();
 
 // Read User Information

@@ -1,4 +1,4 @@
-import { multer, MulterError } from "multer";
+import multer from "multer";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
@@ -49,4 +49,9 @@ const imageUploadService = multer({
   },
 });
 
+/**
+ * item => image
+ *
+ *
+ */
 export default imageUploadService;
