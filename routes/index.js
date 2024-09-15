@@ -1,7 +1,10 @@
 import userRoutes from "./users.js";
 import profileRoutes from "./profiles.js";
+import express from "express";
 
-router.use("/user", userRoutes);
-router.use("/profile", profileRoutes);
+const router = express.Router();
+
+router.use("/users", userRoutes);
+router.use("/profiles", profileRoutes);
 
 export default router;

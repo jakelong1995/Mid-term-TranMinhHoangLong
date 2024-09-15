@@ -19,12 +19,11 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   gender: {
-    type: Boolean,
-    default: 0,
+    type: String,
+    enum: ["male", "female", "other"],
   },
   pwd: {
     type: String,
-    required: true,
   },
 });
 

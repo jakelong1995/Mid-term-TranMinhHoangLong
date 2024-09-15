@@ -66,6 +66,7 @@ export const register = async (req, res) => {
     hometown,
     nation,
   });
+
   const savedUser = await newUser.save();
 
   return res.status(200).json({

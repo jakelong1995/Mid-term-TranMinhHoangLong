@@ -3,8 +3,18 @@ import {
   insertUser,
   countUsers,
   updateUserBy,
+  deleteUserBy,
 } from "../services/userService.js";
 import cloudinaryUploadImage from "../helpers/cloudinaryUploadImage.js";
+
+const getUserById = async (req, res) => {
+  const { userId } = req.params;
+  const user = await findUsersBy(userId);
+  return res.json({
+    msg: "success",
+    data: user,
+  });
+};
 
 const getAllUsers = async (req, res) => {
   const { query } = req;
@@ -46,67 +56,52 @@ const getUsersBy = (req, res) => {
   });
 };
 
-const updateUserById = (req, res) => {};
-// uuid
-const deleteUserById = (req, res) => {};
-
-const createAnUser = (req, res) => {
-  const { body, decode } = req;
-  if (decode && decode.role === "admin") {
-    let result;
-    if (body) {
-      const { uname, fname, gender } = body;
-      if (!uname || !fname || gender === null) {
-        return res.status(400).json({
-          msg: "fail, not enough info...",
-        });
-      }
-      result = insertUser({ uname, fname, gender });
-      if (!result) {
-        return res.status(400).json({
-          msg: "fail, user existed!",
-        });
-      }
-    }
-    return res.json({
-      msg: "insert successfully!",
-    });
-  } else if (decode && decode.role === "guest") {
-    return res.status(403).json({
-      msg: "Not permission",
-    });
-  } else {
-    return res.status(404).json({
-      msg: "Role is invalid",
-    });
-  }
+const updateUserById = async (req, res) => {
+  const { userId } = req.params;
+  const { body } = req;
+  const result = await updateUserBy(userId, body);
+  return res.status(202).json({
+    msg: "success",
+    data: result,
+  });
 };
 
-const createUsers = (req, res) => {
-  const { body } = req;
-  let result = {
+const deleteUserById = async (req, res) => {
+  const { userId } = req.params;
+  await deleteUserBy(userId);
+  return res.status(204).end();
+};
+
+const createUsers = async (req, res) => {
+  const users = req.body;
+  const result = {
     success: [],
     fail: [],
   };
-  if (body) {
-    const { users = [] } = body;
-    users.map((user) => {
-      const { uname, fname, gender } = user;
-      if (!uname || !fname || gender === null) {
-        result.fail.push(user);
-        return;
+
+  for (const user of users) {
+    const { fullname, gender, email } = user;
+    if (!fullname || !gender || !email) {
+      result.fail.push({ ...user, reason: "Missing required fields" });
+      continue;
+    }
+
+    try {
+      const insertedUser = await insertUser(user);
+      if (insertedUser) {
+        result.success.push(insertedUser);
+      } else {
+        result.fail.push({ ...user, reason: "Insertion failed" });
       }
-      let _result = insertUser({ uname, fname, gender });
-      if (!_result) {
-        result.fail.push(user);
-        return;
-      }
-      result.success.push(user);
-    });
+    } catch (error) {
+      s;
+      console.error("Error inserting user:", error);
+      result.fail.push({ ...user, reason: "Server error" });
+    }
   }
-  return res.json({
-    data: result,
-  });
+
+  const status = result.fail.length > 0 ? 207 : 200; // Multi-Status or OK
+  return res.status(status).json({ data: result });
 };
 
 const uploadAvatar = async (req, res) => {
@@ -132,8 +127,8 @@ const uploadAvatar = async (req, res) => {
 };
 export default {
   getAllUsers,
+  getUserById,
   getUsersBy,
-  createAnUser,
   createUsers,
   updateUserById,
   deleteUserById,

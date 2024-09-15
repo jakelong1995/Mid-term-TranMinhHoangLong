@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user";
+import User from "../models/user.js";
 const authMdw = async (req, res, next) => {
   try {
     // Get the JWT token from the Authorization header
-    const token = req.headers["x-access-token"];
+    const token = req.headers["authorization"];
 
     if (!token) {
       return res.status(401).json({ message: "Unauthorized" });

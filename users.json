@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "uname": "johndoe",
+      "fname": "John Doe",
+      "gender": "male"
+    },
+    {
+      "uname": "janedoe",
+      "fname": "Jane Doe",
+      "gender": "female"
+    },
+    {
+      "uname": "alexsmith",
+      "fname": "Alex Smith",
+      "gender": "non-binary"
+    }
+  ]
+}
