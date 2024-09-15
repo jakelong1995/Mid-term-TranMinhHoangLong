@@ -1,40 +1,126 @@
-Đề giữa kỳ WFS
-Thực hiện thiết kế cơ sở dữ liệu để đáp ứng những thông tin sau:
-Thông tin cá nhân bao gồm các trường dữ liệu:
-Email (dạng String, unique)
-Họ và tên (dạng String)
-Ngày tháng năm sinh (dạng String)
-Nơi sinh (dạng String)
-Quốc tịch (dạng String)
-Password đã mã hóa (dạng String)
-Thông tin hồ sơ cá nhân bao gồm các trường dữ liệu: 
-userId ( dạng mongoose.Schema.Types.ObjectId) tham chiếu tới id của collection thông tin cá nhân
-Các kỹ năng cá nhân (dạng mảng với mỗi item là dạng String String array)
-Các sở thích (dạng String)
-Các mục tiêu cá nhân (dạng mảng với mỗi item là dạng String String array)
-Chi tiết:
-Collection users: lưu trữ thông tin cá nhân.
-Collection profile: lưu trữ thông tin hồ sơ cá nhân.
-Từ dữ liệu vừa thiết kế hãy thiết kế API có thể đáp ứng các yêu cầu sau:
-Từ bảng user tạo API để đăng ký tài khoản và đăng nhập.
-Viết middleware kiểm tra phiên người dùng đăng nhập
-Với các trường yêu cầu phải thiết kế API C.R.U.D cho tất cả các thông tin trên cơ sở dữ liệu.
-Đối với hồ sơ cá nhân gắn với tài khoản chỉ có chủ sở hữu mới có thể sửa và xóa (update/delete) còn các hồ sơ khác chỉ có thể xem. Nếu không login không sửa và xóa được các hồ sơ.
-Mọi API đều yêu cầu người dùng đăng nhập chỉ trừ API đăng ký tài khoản và đăng nhập
+# User Profile Management API
 
-	Gợi ý:
-Đối với chức năng tạo tài khoản: 
-Người dùng gửi dữ liệu lên api dạng HTTP POST với payload (HTTP BODY) gồm các thông tin email, password, vv. Mã hóa password dùng thư viện Bcrypt rồi lưu vào CSDL.
-Đối với chức năng login: 
-Người dùng gửi dữ liệu lên api dạng HTTP POST với payload (HTTP BODY) gồm các thông tin email, password. Kiểm tra xác thực thông tin đăng nhập với CSDL.
-Nếu đúng thì dùng khái niệm JWT để tạo JWT token thiết lập phiên đăng nhập cho người dùng với thư viện jsonwebtoken
-Trong JWT token trả về cho người dùng phần payload của JWT thêm vào trường userId để xác định JWT token đó là của user nào
-Đối với chức năng viết middleware kiểm tra phiên đăng nhập:
-Viết Middleware chứa logic lấy và kiểm tra request của người dùng có đính kèm JWT token trong HTTP HEADER hay không sử dụng thư viện jsonwebtoken kiểm tra JWT token có valid hay không. 
-Nếu JWT token valid thì load thông tin người dùng từ CSDL với thông tin userId gắn trong payload của JWT token nhưng trừ trường password, sau đó gán vào trong object HTTP request (req.user = userService.getUserById) nhằm giúp cho các middleware tiếp theo sẽ dựa trên thông tin này để biết người dùng đó có đăng nhập hay chưa và kiểm tra được request đó là của người dùng nào
-Đối với chức năng sửa và xóa (update/delete) hồ sơ cá nhân:
-Người dùng gửi request HTTP PUT để cập nhật hồ sơ, lúc này lấy thông tin đăng nhập của người dùng từ object req.user được gán từ middleware kiểm tra phiên đăng nhập so sánh với userId của hồ sơ cá nhân đó xem có thuộc về cùng 1 người dùng hay không nếu không hãy quăng lỗi để báo cho người dùng biết không có quyền sửa hay xóa thông tin hồ sơ này.
-Yêu cầu:
-Ứng dụng mô hình MVC
-Thêm validation đơn giản để kiểm tra dữ liệu
-Không cần phải mapping dữ liệu trả về từ database vào DTO (trả thẳng dữ liệu từ model cho người dùng)
+This project is a Node.js-based API for managing user profiles, including image uploads and user data management.
+
+## Features
+
+- User registration and authentication
+- User profile management
+- Image upload functionality (using Cloudinary)
+- RESTful API endpoints for users and profiles
+
+## Project Structure
+
+- `services/userService.js`: Contains user-related business logic
+- `routes/`:
+  - `users.js`: User-related routes
+  - `profiles.js`: Profile-related routes
+  - `index.js`: Main router file
+- `helpers/`:
+  - `cloudinaryUploadImage.js`: Helper for uploading images to Cloudinary
+  - `uploadImage.js`: General image upload helper
+
+## Setup
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables in `.env` file (see `.env.example` for required variables)
+4. Start the server:
+   ```bash
+   npm start
+   ```
+
+## API Endpoints
+
+### Users
+
+- `GET /users/:userId`: Get user information
+- `PUT /users/:userId`: Update user information
+- `DELETE /users/:userId`: Delete user account
+- `POST /users/upload/`: Upload user avatar
+
+### Profiles
+
+- `POST /profiles`: Create a new profile (Register)
+- `GET /profiles/:profileId`: Get profile information
+- `PUT /profiles/:profileId`: Update profile information
+- `DELETE /profiles/:profileId`: Delete profile
+
+For more detailed information on request/response formats, please refer to the API documentation below.
+
+## API Documentation
+
+### Users
+
+#### Get User Information
+
+- **URL**: `/users/:userId`
+- **Method**: `GET`
+- **Description**: Retrieve information for a specific user
+
+#### Update User Information
+
+- **URL**: `/users/:userId`
+- **Method**: `PUT`
+- **Description**: Update information for a specific user
+
+#### Delete User Account
+
+- **URL**: `/users/:userId`
+- **Method**: `DELETE`
+- **Description**: Delete a user account
+
+#### Upload User Avatar
+
+- **URL**: `/users/upload/`
+- **Method**: `POST`
+- **Description**: Upload an avatar image for a user
+- **Note**: This endpoint uses local image upload middleware
+
+### Profiles
+
+#### Create Profile (Register)
+
+- **URL**: `/profiles`
+- **Method**: `POST`
+- **Description**: Create a new user profile
+
+#### Get Profile Information
+
+- **URL**: `/profiles/:profileId`
+- **Method**: `GET`
+- **Description**: Retrieve information for a specific profile
+
+#### Update Profile Information
+
+- **URL**: `/profiles/:profileId`
+- **Method**: `PUT`
+- **Description**: Update information for a specific profile
+
+#### Delete Profile
+
+- **URL**: `/profiles/:profileId`
+- **Method**: `DELETE`
+- **Description**: Delete a user profile
+
+## Environment Variables
+
+Make sure to set up the following environment variables in your `.env` file:
+
+- `PORT`: The port on which the server will run
+- `MONGODB_URI`: MongoDB connection string
+- `JWT_SECRET`: Secret key for JWT token generation
+- `CLOUDINARY_CLOUD_NAME`: Your Cloudinary cloud name
+- `CLOUDINARY_API_KEY`: Your Cloudinary API key
+- `CLOUDINARY_API_SECRET`: Your Cloudinary API secret
+
+## Contributing
+
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE.md file for details.
